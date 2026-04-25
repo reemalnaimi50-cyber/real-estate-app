@@ -5,7 +5,7 @@ import pandas as pd
 
 st.title("Real Estate Price Prediction")
 
-# 🏠 اختيار نوع العقار
+# 🏠 اختيار النوع
 property_type = st.selectbox("Select Property Type", [
     "Apartment Rent",
     "Apartment Sale",
@@ -15,26 +15,19 @@ property_type = st.selectbox("Select Property Type", [
     "Land Sale"
 ])
 
-# 📦 النماذج
-models = {
-    "Apartment Rent": "model_apartment_rent.pkl",
-    "Apartment Sale": "model_apartment_sale.pkl",
-    "House Rent": "model_house_rent.pkl",
-    "House Sale": "model_house_sale.pkl",
-    "Land Rent": "model_land_rent.pkl",
-    "Land Sale": "model_land_sale.pkl",
-}
+safe_name = property_type.replace(" ", "_")
 
-model = joblib.load(models[property_type])
+# 📦 تحميل النموذج + الأعمدة
+model = joblib.load(f"model_{safe_name.lower()}.pkl")
+columns = joblib.load(f"{safe_name}_columns.pkl")
 
 # 🧠 إدخال البيانات
 data = {}
 
-# 🔥 أهم شيء: log_area
+# 📏 المساحة (مهم: log)
 area = st.number_input("Area (sqm)", min_value=1.0)
 data["log_area"] = np.log(area)
 
-# المدينة (لا تغيريها عن التدريب)
 data["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
 
 # 🏠 شقق وبيوت
@@ -57,35 +50,27 @@ if "Land" in property_type:
     data["street_width"] = st.number_input("Street Width", min_value=0)
     data["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0.0)
 
-# 🏠 فترة الإيجار
+# 🏠 الإيجار
 if "Rent" in property_type:
     rent_choice = st.selectbox("Rent Period", ["Monthly", "6 Months", "Yearly"])
     rent_map = {"Monthly": 1, "6 Months": 6, "Yearly": 12}
     data["rent_period_num"] = rent_map[rent_choice]
 
-# 🚀 التنبؤ
+# 🚀 prediction
 if st.button("Predict Price"):
 
     df = pd.DataFrame([data])
-
-    # تحويل الأعمدة
     df = pd.get_dummies(df)
 
-    # تحميل الأعمدة الأصلية من التدريب
-    columns = joblib.load(property_type + "_columns.pkl")
-
-    # إضافة الأعمدة الناقصة
+    # 🔥 توحيد الأعمدة (مهم جدًا)
     for col in columns:
         if col not in df.columns:
             df[col] = 0
 
-    # ترتيب الأعمدة
     df = df[columns]
 
-    # التنبؤ
     pred = model.predict(df)
 
-    # تحويل من log إلى سعر
     price = np.exp(pred[0])
 
     st.success(f"Predicted Price: {price:,.0f} SAR")
