@@ -16,20 +16,30 @@ property_type = st.selectbox("Select Property Type", [
 ])
 
 # 📦 تحميل النموذج حسب النوع
+
 if property_type == "Apartment Rent":
     model = joblib.load("model_apartment_rent.pkl")
 
 elif property_type == "Apartment Sale":
-    model = joblib.load("model_apartment_sale.pkl")
+
+    model_version = st.selectbox("Select Model Version", [
+        "Model 1",
+        "Model 2"
+    ])
+
+    if model_version == "Model 1":
+        model = joblib.load("model_apartment_sale.pkl")
+    else:
+        model = joblib.load("model_apartment_sale2.pkl")
 
 elif property_type == "House Rent":
     model = joblib.load("model_house_rent.pkl")
 
 elif property_type == "House Sale":
-    model = joblib.load("model_house_sale3.pkl")  # ✔ رقم 3
+    model = joblib.load("model_house_sale3.pkl")
 
 elif property_type == "Land Sale":
-    model = joblib.load("model_land_sale3.pkl")   # ✔ رقم 3
+    model = joblib.load("model_land_sale3.pkl")
 
 elif property_type == "Land Rent":
     model = joblib.load("model_land_rent.pkl")
@@ -39,6 +49,7 @@ elif property_type == "Land Rent":
 
 # 🟢 الأراضي
 if "Land" in property_type:
+
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
     street_width = st.number_input("Street Width", min_value=0)
@@ -54,6 +65,7 @@ if "Land" in property_type:
 
 # 🟡 الشقق
 elif "Apartment" in property_type:
+
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
     beds = st.number_input("Beds", min_value=0)
@@ -73,6 +85,7 @@ elif "Apartment" in property_type:
 
 # 🔵 البيوت
 elif "House" in property_type:
+
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
     beds = st.number_input("Beds", min_value=0)
