@@ -1,66 +1,76 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
 import joblib
+import numpy as np
+import pandas as pd
 
-# تحميل النموذج
-model = joblib.load("real_estate_model.pkl")
+st.title("Real Estate Price Prediction")
 
-# 🎨 إعداد الصفحة
-st.set_page_config(page_title="Real Estate Predictor", layout="centered")
+# 🏠 اختيار نوع العقار
+property_type = st.selectbox("Select Property Type", [
+    "Apartment Rent",
+    "Apartment Sale",
+    "House Rent",
+    "House Sale",
+    "Land Sale",
+    "Land Rent"
+])
 
-st.title("Real Estate Price Prediction System")
-st.write("Enter property details to predict the estimated price")
+# 📊 المدخلات الأساسية
+area = st.number_input("Area (sqm)", min_value=1.0)
+city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
 
-st.markdown("---")
+# 👇 مدخلات إضافية (لبعض الأنواع)
+beds = st.number_input("Beds", min_value=0)
+livings = st.number_input("Living Rooms", min_value=0)
+wc = st.number_input("Bathrooms", min_value=0)
+age = st.number_input("Property Age", min_value=0)
+street_width = st.number_input("Street Width", min_value=0)
+furnished = st.selectbox("Furnished", [0, 1])
+ketchen = st.selectbox("Kitchen", [0, 1])
+distance_to_sea = st.number_input("Distance to Sea", min_value=0.0)
 
-# 🏷️ نوع العقار
-property_type = st.selectbox(
-    "Property Type",
-    [
-        "Apartment Sale",
-        "Apartment Rent",
-        "House Sale",
-        "House Rent",
-        "Land Sale",
-        "Land Rent"
-    ]
-)
+# 📦 تحميل النموذج حسب الاختيار
+if property_type == "Apartment Rent":
+    model = joblib.load("model_apartment_rent.pkl")
 
-# 🏙️ المدينة (بدون حي)
-city = st.selectbox(
-    "City",
-    ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"]
-)
+elif property_type == "Apartment Sale":
+    model = joblib.load("model_apartment_sale.pkl")
 
-# 📏 المساحة
-area = st.number_input("Area (sqm)", min_value=0.0)
+elif property_type == "House Rent":
+    model = joblib.load("model_house_rent.pkl")
 
-st.markdown("---")
+elif property_type == "House Sale":
+    model = joblib.load("model_house_sale.pkl")
 
-# 🤖 زر التوقع
+elif property_type == "Land Sale":
+    model = joblib.load("model_land_sale.pkl")
+
+elif property_type == "Land Rent":
+    model = joblib.load("model_land_rent.pkl")
+
+# 🚀 التنبؤ
 if st.button("Predict Price"):
 
-    # تجهيز البيانات
-    input_data = pd.DataFrame({
-        "area": [area],
-        "city": [city],
-        "property_type": [property_type]
-    })
+    input_data = pd.DataFrame([{
+        "area": area,
+        "city": city,
+        "beds": beds,
+        "livings": livings,
+        "wc": wc,
+        "age": age,
+        "street_width": street_width,
+        "furnished": furnished,
+        "ketchen": ketchen,
+        "distance_to_sea": distance_to_sea
+    }])
 
-    # تحويل البيانات إلى dummy variables
+    # تحويل النصوص إلى أرقام
     input_data = pd.get_dummies(input_data)
-
-    # توحيد الأعمدة مع النموذج
-    input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
 
     # التنبؤ
     prediction = model.predict(input_data)
 
-    # إذا كنتِ مستخدمة log price
+    # إذا استخدمتي log
     price = np.exp(prediction[0])
 
-    #  عرض النتيجة
-    st.success(f"Estimated Price: {price:,.2f} SAR")
-
-    st.balloons()
+    st.success(f"Predicted Price: {price:,.0f} SAR")
