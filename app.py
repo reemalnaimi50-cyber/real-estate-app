@@ -5,7 +5,7 @@ import pandas as pd
 
 st.title("Real Estate Price Prediction")
 
-# اختيار النوع
+# 🏠 اختيار النوع
 property_type = st.selectbox("Select Property Type", [
     "Apartment Rent",
     "Apartment Sale",
@@ -15,7 +15,7 @@ property_type = st.selectbox("Select Property Type", [
     "Land Sale"
 ])
 
-# تحميل النموذج
+# 📦 تحميل النموذج
 models = {
     "Apartment Rent": "model_apartment_rent.pkl",
     "Apartment Sale": "model_apartment_sale.pkl",
@@ -27,29 +27,39 @@ models = {
 
 model = joblib.load(models[property_type])
 
-# إدخال البيانات
+# 🧠 إدخال البيانات
 data = {}
 
-data["area"] = st.number_input("Area", min_value=1.0)
+data["area"] = st.number_input("Area (sqm)", min_value=1.0)
 data["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
 
+# 🏠 شقق وبيوت
 if "Apartment" in property_type or "House" in property_type:
     data["beds"] = st.number_input("Beds", min_value=0)
     data["livings"] = st.number_input("Living Rooms", min_value=0)
     data["wc"] = st.number_input("Bathrooms", min_value=0)
 
+# 🏡 بيت
 if "House" in property_type:
     data["street_width"] = st.number_input("Street Width", min_value=0)
 
+# 🏢 شقة
 if "Apartment" in property_type:
     furnished = st.selectbox("Furnished", ["No", "Yes"])
     data["furnished"] = 1 if furnished == "Yes" else 0
 
+# 🌊 أرض
 if "Land" in property_type:
     data["street_width"] = st.number_input("Street Width", min_value=0)
-    data["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0)
+    data["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0.0)
 
-# تنبؤ
+# 🏠 فترة الإيجار
+if "Rent" in property_type:
+    rent_choice = st.selectbox("Rent Period", ["Monthly", "6 Months", "Yearly"])
+    rent_map = {"Monthly": 1, "6 Months": 6, "Yearly": 12}
+    data["rent_period_num"] = rent_map[rent_choice]
+
+# 🚀 التنبؤ
 if st.button("Predict Price"):
 
     df = pd.DataFrame([data])
@@ -58,6 +68,7 @@ if st.button("Predict Price"):
     df = df.reindex(columns=model.feature_names_in_, fill_value=0)
 
     pred = model.predict(df)
+
     price = np.exp(pred[0])
 
-    st.success(f"Price: {price:,.0f} SAR")
+    st.success(f"Predicted Price: {price:,.0f} SAR")
