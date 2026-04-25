@@ -19,22 +19,17 @@ def train_model(file_path, name):
     df["log_area"] = np.log(df["area"])
     df["log_price"] = np.log(df["price"])
 
-    # 🌊 distance to sea
+    # 🌊 البحر
     if "distance_to_sea" in df.columns:
         df["distance_to_sea"] = df["distance_to_sea"].fillna(0)
     else:
         df["distance_to_sea"] = 0
 
     # 🏠 rent period
-    rent_map = {
-        "Monthly": 1,
-        "6 Months": 6,
-        "Yearly": 12
-    }
+    rent_map = {"Monthly": 1, "6 Months": 6, "Yearly": 12}
 
     if "rent_period" in df.columns:
-        df["rent_period_num"] = df["rent_period"].map(rent_map)
-        df["rent_period_num"] = df["rent_period_num"].fillna(0)
+        df["rent_period_num"] = df["rent_period"].map(rent_map).fillna(0)
     else:
         df["rent_period_num"] = 0
 
@@ -59,10 +54,10 @@ def train_model(file_path, name):
     X = df[features]
     y = df["log_price"]
 
-    # 🔥 encoding
+    # 🔄 encoding
     X = pd.get_dummies(X)
 
-    # 🧹 تنظيف
+    # 🧹 تنظيف نهائي
     X = X.replace([np.inf, -np.inf], np.nan)
     mask = X.notna().all(axis=1)
 
@@ -74,7 +69,7 @@ def train_model(file_path, name):
         X, y, test_size=0.2, random_state=42
     )
 
-    # 🚀 model
+    # 🤖 model
     model = xgb.XGBRegressor(
         n_estimators=500,
         learning_rate=0.05,
@@ -91,26 +86,19 @@ def train_model(file_path, name):
     r2 = r2_score(y_test, pred)
     print(name, "R2 =", r2)
 
-    return model
+    # 💾 حفظ النموذج + الأعمدة (مهم جدًا)
+    safe_name = name.replace(" ", "_")
+
+    joblib.dump(model, f"model_{safe_name.lower()}.pkl")
+    joblib.dump(X.columns, f"{safe_name}_columns.pkl")
 
 
-# 🏠 تشغيل
-model_ar = train_model("Apartment_rent.xlsx", "Apartment Rent")
-model_as = train_model("Apartment_sale.xlsx", "Apartment Sale")
+# 🏁 تشغيل كل النماذج
+train_model("Apartment_rent.xlsx", "Apartment Rent")
+train_model("Apartment_sale.xlsx", "Apartment Sale")
 
-model_hr = train_model("House_rent.xlsx", "House Rent")
-model_hs = train_model("House_sale.xlsx", "House Sale")
+train_model("House_rent.xlsx", "House Rent")
+train_model("House_sale.xlsx", "House Sale")
 
-model_lr = train_model("Land_rent.xlsx", "Land Rent")
-model_ls = train_model("Land_sale.xlsx", "Land Sale")
-
-
-# 💾 حفظ
-joblib.dump(model_ar, "model_apartment_rent.pkl")
-joblib.dump(model_as, "model_apartment_sale.pkl")
-
-joblib.dump(model_hr, "model_house_rent.pkl")
-joblib.dump(model_hs, "model_house_sale.pkl")
-
-joblib.dump(model_lr, "model_land_rent.pkl")
-joblib.dump(model_ls, "model_land_sale.pkl")
+train_model("Land_rent.xlsx", "Land Rent")
+train_model("Land_sale.xlsx", "Land Sale")
