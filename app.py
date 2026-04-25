@@ -30,7 +30,7 @@ model = joblib.load(models[property_type])
 # 🧠 إدخال البيانات
 data = {}
 
-data["area"] = st.number_input("Area (sqm)", min_value=1.0)
+data["log_area"] = np.log(area)
 data["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
 
 # 🏠 شقق وبيوت
@@ -65,7 +65,18 @@ if st.button("Predict Price"):
     df = pd.DataFrame([data])
     df = pd.get_dummies(df)
 
-    df = df.reindex(columns=model.feature_names_in_, fill_value=0)
+    # تحميل الأعمدة الصحيحة
+columns = joblib.load(property_type + "_columns.pkl")
+
+df = pd.get_dummies(df)
+
+# إضافة الأعمدة الناقصة
+for col in columns:
+    if col not in df.columns:
+        df[col] = 0
+
+# ترتيب الأعمدة
+df = df[columns]
 
     pred = model.predict(df)
 
