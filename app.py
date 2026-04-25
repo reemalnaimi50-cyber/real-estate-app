@@ -5,7 +5,7 @@ import pandas as pd
 
 st.title("Real Estate Price Prediction")
 
-# 🏠 نوع العقار
+# اختيار النوع
 property_type = st.selectbox("Select Property Type", [
     "Apartment Rent",
     "Apartment Sale",
@@ -15,83 +15,49 @@ property_type = st.selectbox("Select Property Type", [
     "Land Sale"
 ])
 
-# 📦 تحميل النموذج
-try:
-    if property_type == "Apartment Rent":
-        model = joblib.load("model_apartment_rent.pkl")
+# تحميل النموذج
+models = {
+    "Apartment Rent": "model_apartment_rent.pkl",
+    "Apartment Sale": "model_apartment_sale.pkl",
+    "House Rent": "model_house_rent.pkl",
+    "House Sale": "model_house_sale.pkl",
+    "Land Rent": "model_land_rent.pkl",
+    "Land Sale": "model_land_sale.pkl",
+}
 
-    elif property_type == "Apartment Sale":
-        model = joblib.load("model_apartment_sale2.pkl")
+model = joblib.load(models[property_type])
 
-    elif property_type == "House Rent":
-        model = joblib.load("model_house_rent.pkl")
+# إدخال البيانات
+data = {}
 
-    elif property_type == "House Sale":
-        model = joblib.load("model_house_sale3.pkl")
+data["area"] = st.number_input("Area", min_value=1.0)
+data["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
 
-    elif property_type == "Land Rent":
-        model = joblib.load("model_land_rent.pkl")
+if "Apartment" in property_type or "House" in property_type:
+    data["beds"] = st.number_input("Beds", min_value=0)
+    data["livings"] = st.number_input("Living Rooms", min_value=0)
+    data["wc"] = st.number_input("Bathrooms", min_value=0)
 
-    elif property_type == "Land Sale":
-        model = joblib.load("model_land_sale3.pkl")
+if "House" in property_type:
+    data["street_width"] = st.number_input("Street Width", min_value=0)
 
-except:
-    st.error("Model file not found. Check GitHub upload.")
-    st.stop()
+if "Apartment" in property_type:
+    furnished = st.selectbox("Furnished", ["No", "Yes"])
+    data["furnished"] = 1 if furnished == "Yes" else 0
 
-
-# 🧠 إدخال البيانات
-input_dict = {}
-
-# 🟢 Land
 if "Land" in property_type:
-    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
-    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
-    input_dict["street_width"] = st.number_input("Street Width", min_value=0)
-    input_dict["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0.0)
+    data["street_width"] = st.number_input("Street Width", min_value=0)
+    data["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0)
 
-# 🟡 Apartment
-elif "Apartment" in property_type:
-    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
-    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
-    input_dict["beds"] = st.number_input("Beds", min_value=0)
-    input_dict["livings"] = st.number_input("Living Rooms", min_value=0)
-    input_dict["wc"] = st.number_input("Bathrooms", min_value=0)
-
-    furnished = st.selectbox("Furnishing", ["Not Furnished", "Furnished"])
-    input_dict["furnished"] = 1 if furnished == "Furnished" else 0
-
-    if "Rent" in property_type:
-        input_dict["rent_period"] = st.selectbox("Rent Period", ["Monthly", "Quarterly", "Yearly"])
-
-# 🔵 House
-elif "House" in property_type:
-    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
-    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
-    input_dict["beds"] = st.number_input("Beds", min_value=0)
-    input_dict["livings"] = st.number_input("Living Rooms", min_value=0)
-    input_dict["wc"] = st.number_input("Bathrooms", min_value=0)
-    input_dict["street_width"] = st.number_input("Street Width", min_value=0)
-
-
-# 🚀 التنبؤ
+# تنبؤ
 if st.button("Predict Price"):
 
-    try:
-        input_data = pd.DataFrame([input_dict])
+    df = pd.DataFrame([data])
+    df = pd.get_dummies(df)
 
-        # One-hot encoding
-        input_data = pd.get_dummies(input_data)
+    df = df.reindex(columns=model.feature_names_in_, fill_value=0)
 
-        # 🔥 أهم خطوة لحل مشكلة الأعمدة
-        input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
+    pred = model.predict(df)
+    price = np.exp(pred[0])
 
-        prediction = model.predict(input_data)
-
-        price = np.exp(prediction[0])
-
-        st.success(f"Predicted Price: {price:,.0f} SAR")
-
-    except Exception as e:
-        st.error("Prediction error")
-        st.write(str(e))
+    st.success(f"Price: {price:,.0f} SAR")
