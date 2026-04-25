@@ -19,16 +19,22 @@ def train_model(file_path, name):
     df["log_area"] = np.log(df["area"])
     df["log_price"] = np.log(df["price"])
 
-    # 🌊 البحر
-    if "distance_to_sea" not in df.columns:
-        df["distance_to_sea"] = 0
-    else:
+    # 🌊 distance to sea
+    if "distance_to_sea" in df.columns:
         df["distance_to_sea"] = df["distance_to_sea"].fillna(0)
+    else:
+        df["distance_to_sea"] = 0
 
     # 🏠 rent period
+    rent_map = {
+        "Monthly": 1,
+        "6 Months": 6,
+        "Yearly": 12
+    }
+
     if "rent_period" in df.columns:
-        rent_map = {"Monthly": 1, "Quarterly": 3, "Half-Year": 6, "Yearly": 12}
-        df["rent_period_num"] = df["rent_period"].map(rent_map).fillna(0)
+        df["rent_period_num"] = df["rent_period"].map(rent_map)
+        df["rent_period_num"] = df["rent_period_num"].fillna(0)
     else:
         df["rent_period_num"] = 0
 
@@ -36,30 +42,39 @@ def train_model(file_path, name):
     features = ["log_area", "city"]
 
     extra = [
-        "beds", "livings", "wc",
-        "street_width", "furnished",
-        "distance_to_sea", "rent_period_num"
+        "beds",
+        "livings",
+        "wc",
+        "street_width",
+        "furnished",
+        "distance_to_sea",
+        "rent_period_num"
     ]
 
     for col in extra:
         if col in df.columns:
+            df[col] = df[col].fillna(0)
             features.append(col)
 
     X = df[features]
     y = df["log_price"]
 
+    # 🔥 encoding
     X = pd.get_dummies(X)
 
+    # 🧹 تنظيف
     X = X.replace([np.inf, -np.inf], np.nan)
     mask = X.notna().all(axis=1)
 
     X = X[mask]
     y = y[mask]
 
+    # ✂️ split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
+    # 🚀 model
     model = xgb.XGBRegressor(
         n_estimators=500,
         learning_rate=0.05,
@@ -74,13 +89,12 @@ def train_model(file_path, name):
     pred = model.predict(X_test)
 
     r2 = r2_score(y_test, pred)
-
     print(name, "R2 =", r2)
 
     return model
 
 
-# 🏠 تشغيل النماذج
+# 🏠 تشغيل
 model_ar = train_model("Apartment_rent.xlsx", "Apartment Rent")
 model_as = train_model("Apartment_sale.xlsx", "Apartment Sale")
 
@@ -89,6 +103,7 @@ model_hs = train_model("House_sale.xlsx", "House Sale")
 
 model_lr = train_model("Land_rent.xlsx", "Land Rent")
 model_ls = train_model("Land_sale.xlsx", "Land Sale")
+
 
 # 💾 حفظ
 joblib.dump(model_ar, "model_apartment_rent.pkl")
