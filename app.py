@@ -20,22 +20,24 @@ if property_type == "Apartment Rent":
     model = joblib.load("model_apartment_rent.pkl")
 
 elif property_type == "Apartment Sale":
-    model = joblib.load("model_apartment_sale2.pkl")
+    model = joblib.load("model_apartment_sale2.pkl")  # النسخة رقم 2
 
 elif property_type == "House Rent":
     model = joblib.load("model_house_rent.pkl")
 
 elif property_type == "House Sale":
-    model = joblib.load("model_house_sale3.pkl")  # ✔ رقم 3
+    model = joblib.load("model_house_sale3.pkl")
 
 elif property_type == "Land Sale":
-    model = joblib.load("model_land_sale3.pkl")   # ✔ رقم 3
+    model = joblib.load("model_land_sale3.pkl")
 
 elif property_type == "Land Rent":
     model = joblib.load("model_land_rent.pkl")
 
 
 # 🧠 المدخلات حسب نوع العقار
+
+input_data = None
 
 # 🟢 الأراضي
 if "Land" in property_type:
@@ -90,13 +92,13 @@ elif "House" in property_type:
     }])
 
 
-# 🚀 زر التنبؤ
+# 🚀 زر التنبؤ (آمن)
 if st.button("Predict Price"):
 
-    input_data = pd.get_dummies(input_data)
+    if input_data is None:
+        st.warning("Please enter all inputs first")
+    else:
+        prediction = model.predict(input_data)
+        price = np.exp(prediction[0])  # إذا عندك log
 
-    prediction = model.predict(input_data)
-
-    price = np.exp(prediction[0])  # إذا استخدمتي log
-
-    st.success(f"Predicted Price: {price:,.0f} SAR")
+        st.success(f"Predicted Price: {price:,.0f} SAR")
