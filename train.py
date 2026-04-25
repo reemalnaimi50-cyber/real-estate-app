@@ -11,21 +11,21 @@ def train_model(file_path, name):
 
     df = pd.read_excel(file_path)
 
-    # 🧹 تنظيف
+    # تنظيف
     df["area"] = df["area"].apply(lambda x: x if x > 0 else 1)
     df["price"] = df["price"].apply(lambda x: x if x > 0 else 1)
 
-    # 📊 log
+    # log
     df["log_area"] = np.log(df["area"])
     df["log_price"] = np.log(df["price"])
 
-    # 🌊 البحر
+    # البحر
     if "distance_to_sea" in df.columns:
         df["distance_to_sea"] = df["distance_to_sea"].fillna(0)
     else:
         df["distance_to_sea"] = 0
 
-    # 🏠 rent period
+    # rent
     rent_map = {"Monthly": 1, "6 Months": 6, "Yearly": 12}
 
     if "rent_period" in df.columns:
@@ -33,7 +33,7 @@ def train_model(file_path, name):
     else:
         df["rent_period_num"] = 0
 
-    # 🎯 features
+    # features
     features = ["log_area", "city"]
 
     extra = [
@@ -54,22 +54,22 @@ def train_model(file_path, name):
     X = df[features]
     y = df["log_price"]
 
-    # 🔄 encoding
+    # encoding
     X = pd.get_dummies(X)
 
-    # 🧹 تنظيف نهائي
+    # تنظيف
     X = X.replace([np.inf, -np.inf], np.nan)
     mask = X.notna().all(axis=1)
 
     X = X[mask]
     y = y[mask]
 
-    # ✂️ split
+    # split
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42
     )
 
-    # 🤖 model
+    # model
     model = xgb.XGBRegressor(
         n_estimators=500,
         learning_rate=0.05,
@@ -82,18 +82,18 @@ def train_model(file_path, name):
     model.fit(X_train, y_train)
 
     pred = model.predict(X_test)
-
     r2 = r2_score(y_test, pred)
+
     print(name, "R2 =", r2)
 
-    # 💾 حفظ النموذج + الأعمدة (مهم جدًا)
-    safe_name = name.replace(" ", "_")
+    # 💾 حفظ النموذج + الأعمدة
+    safe = name.replace(" ", "_")
 
-    joblib.dump(model, f"model_{safe_name.lower()}.pkl")
-    joblib.dump(X.columns, f"{safe_name}_columns.pkl")
+    joblib.dump(model, f"model_{safe.lower()}.pkl")
+    joblib.dump(X.columns, f"{safe}_columns.pkl")
 
 
-# 🏁 تشغيل كل النماذج
+# تشغيل
 train_model("Apartment_rent.xlsx", "Apartment Rent")
 train_model("Apartment_sale.xlsx", "Apartment Sale")
 
