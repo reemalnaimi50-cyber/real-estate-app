@@ -5,7 +5,7 @@ import pandas as pd
 
 st.title("Real Estate Price Prediction")
 
-# 🏠 اختيار النوع
+# 🏠 اختيار نوع العقار
 property_type = st.selectbox("Select Property Type", [
     "Apartment Rent",
     "Apartment Sale",
@@ -15,7 +15,7 @@ property_type = st.selectbox("Select Property Type", [
     "Land Sale"
 ])
 
-# 📦 تحميل النموذج
+# 📦 النماذج
 models = {
     "Apartment Rent": "model_apartment_rent.pkl",
     "Apartment Sale": "model_apartment_sale.pkl",
@@ -30,7 +30,11 @@ model = joblib.load(models[property_type])
 # 🧠 إدخال البيانات
 data = {}
 
+# 🔥 أهم شيء: log_area
+area = st.number_input("Area (sqm)", min_value=1.0)
 data["log_area"] = np.log(area)
+
+# المدينة (لا تغيريها عن التدريب)
 data["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
 
 # 🏠 شقق وبيوت
@@ -63,23 +67,25 @@ if "Rent" in property_type:
 if st.button("Predict Price"):
 
     df = pd.DataFrame([data])
+
+    # تحويل الأعمدة
     df = pd.get_dummies(df)
 
-    # تحميل الأعمدة الصحيحة
-columns = joblib.load(property_type + "_columns.pkl")
+    # تحميل الأعمدة الأصلية من التدريب
+    columns = joblib.load(property_type + "_columns.pkl")
 
-df = pd.get_dummies(df)
+    # إضافة الأعمدة الناقصة
+    for col in columns:
+        if col not in df.columns:
+            df[col] = 0
 
-# إضافة الأعمدة الناقصة
-for col in columns:
-    if col not in df.columns:
-        df[col] = 0
+    # ترتيب الأعمدة
+    df = df[columns]
 
-# ترتيب الأعمدة
-df = df[columns]
-
+    # التنبؤ
     pred = model.predict(df)
 
+    # تحويل من log إلى سعر
     price = np.exp(pred[0])
 
     st.success(f"Predicted Price: {price:,.0f} SAR")
