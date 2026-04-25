@@ -11,16 +11,16 @@ property_type = st.selectbox("Select Property Type", [
     "Apartment Sale",
     "House Rent",
     "House Sale",
-    "Land Sale",
-    "Land Rent"
+    "Land Rent",
+    "Land Sale"
 ])
 
-# 📦 تحميل النموذج حسب النوع
+# 📦 تحميل النموذج
 if property_type == "Apartment Rent":
     model = joblib.load("model_apartment_rent.pkl")
 
 elif property_type == "Apartment Sale":
-    model = joblib.load("model_apartment_sale2.pkl")  # النسخة رقم 2
+    model = joblib.load("model_apartment_sale2.pkl")
 
 elif property_type == "House Rent":
     model = joblib.load("model_house_rent.pkl")
@@ -28,18 +28,17 @@ elif property_type == "House Rent":
 elif property_type == "House Sale":
     model = joblib.load("model_house_sale3.pkl")
 
-elif property_type == "Land Sale":
-    model = joblib.load("model_land_sale3.pkl")
-
 elif property_type == "Land Rent":
     model = joblib.load("model_land_rent.pkl")
 
+elif property_type == "Land Sale":
+    model = joblib.load("model_land_sale3.pkl")
 
-# 🧠 المدخلات حسب نوع العقار
 
-input_data = None
+# 🧠 المدخلات
+input_data = pd.DataFrame()
 
-# 🟢 الأراضي
+# 🟢 Land
 if "Land" in property_type:
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
@@ -53,8 +52,7 @@ if "Land" in property_type:
         "distance_to_sea": distance_to_sea
     }])
 
-
-# 🟡 الشقق
+# 🟡 Apartment
 elif "Apartment" in property_type:
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
@@ -72,8 +70,7 @@ elif "Apartment" in property_type:
         "furnished": furnished
     }])
 
-
-# 🔵 البيوت
+# 🔵 House
 elif "House" in property_type:
     area = st.number_input("Area (sqm)", min_value=1.0)
     city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
@@ -92,13 +89,15 @@ elif "House" in property_type:
     }])
 
 
-# 🚀 زر التنبؤ (آمن)
+# 🚀 التنبؤ
 if st.button("Predict Price"):
 
-    if input_data is None:
-        st.warning("Please enter all inputs first")
-    else:
+    try:
         prediction = model.predict(input_data)
-        price = np.exp(prediction[0])  # إذا عندك log
+        price = np.exp(prediction[0])
 
         st.success(f"Predicted Price: {price:,.0f} SAR")
+
+    except Exception as e:
+        st.error("Error in prediction. Check model or inputs.")
+        st.write(str(e))
