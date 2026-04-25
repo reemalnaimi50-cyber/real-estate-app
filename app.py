@@ -6,34 +6,61 @@ import joblib
 # تحميل النموذج
 model = joblib.load("real_estate_model.pkl")
 
-st.title("Real Estate Price Prediction")
+# 🎨 إعداد الصفحة
+st.set_page_config(page_title="Real Estate Predictor", layout="centered")
 
-st.write("Enter property details below:")
+st.title("Real Estate Price Prediction System")
+st.write("Enter property details to predict the estimated price")
 
-# المدخلات
-area = st.number_input("Area (sqm)")
-city = st.text_input("City")
-district = st.text_input("District")
+st.markdown("---")
 
-# زر التنبؤ
+# 🏷️ نوع العقار
+property_type = st.selectbox(
+    "Property Type",
+    [
+        "Apartment Sale",
+        "Apartment Rent",
+        "House Sale",
+        "House Rent",
+        "Land Sale",
+        "Land Rent"
+    ]
+)
+
+# 🏙️ المدينة (بدون حي)
+city = st.selectbox(
+    "City",
+    ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"]
+)
+
+# 📏 المساحة
+area = st.number_input("Area (sqm)", min_value=0.0)
+
+st.markdown("---")
+
+# 🤖 زر التوقع
 if st.button("Predict Price"):
 
     # تجهيز البيانات
     input_data = pd.DataFrame({
         "area": [area],
         "city": [city],
-        "district": [district]
+        "property_type": [property_type]
     })
 
-    # تحويل البيانات
+    # تحويل البيانات إلى dummy variables
     input_data = pd.get_dummies(input_data)
 
-    # توحيد الأعمدة مع التدريب
+    # توحيد الأعمدة مع النموذج
     input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
 
     # التنبؤ
-    log_price = model.predict(input_data)
+    prediction = model.predict(input_data)
 
-    price = np.exp(log_price[0])
+    # إذا كنتِ مستخدمة log price
+    price = np.exp(prediction[0])
 
-    st.success(f"Predicted Price: {price:,.2f} SAR")
+    #  عرض النتيجة
+    st.success(f"Estimated Price: {price:,.2f} SAR")
+
+    st.balloons()
