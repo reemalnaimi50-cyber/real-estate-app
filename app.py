@@ -11,8 +11,8 @@ property_type = st.selectbox("Select Property Type", [
     "Apartment Sale",
     "House Rent",
     "House Sale",
-    "Land Rent",
-    "Land Sale"
+    "Land Sale",
+    "Land Rent"
 ])
 
 # 📦 تحميل النموذج
@@ -28,76 +28,58 @@ elif property_type == "House Rent":
 elif property_type == "House Sale":
     model = joblib.load("model_house_sale3.pkl")
 
-elif property_type == "Land Rent":
-    model = joblib.load("model_land_rent.pkl")
-
 elif property_type == "Land Sale":
     model = joblib.load("model_land_sale3.pkl")
 
+elif property_type == "Land Rent":
+    model = joblib.load("model_land_rent.pkl")
 
-# 🧠 المدخلات
-input_data = pd.DataFrame()
+
+# 🧠 المدخلات حسب النوع
+input_dict = {}
 
 # 🟢 Land
 if "Land" in property_type:
-    area = st.number_input("Area (sqm)", min_value=1.0)
-    city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
-    street_width = st.number_input("Street Width", min_value=0)
-    distance_to_sea = st.number_input("Distance to Sea", min_value=0.0)
-
-    input_data = pd.DataFrame([{
-        "area": area,
-        "city": city,
-        "street_width": street_width,
-        "distance_to_sea": distance_to_sea
-    }])
+    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
+    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
+    input_dict["street_width"] = st.number_input("Street Width", min_value=0)
+    input_dict["distance_to_sea"] = st.number_input("Distance to Sea", min_value=0.0)
 
 # 🟡 Apartment
 elif "Apartment" in property_type:
-    area = st.number_input("Area (sqm)", min_value=1.0)
-    city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
-    beds = st.number_input("Beds", min_value=0)
-    livings = st.number_input("Living Rooms", min_value=0)
-    wc = st.number_input("Bathrooms", min_value=0)
-    furnished = st.selectbox("Furnished", [0, 1])
-
-    input_data = pd.DataFrame([{
-        "area": area,
-        "city": city,
-        "beds": beds,
-        "livings": livings,
-        "wc": wc,
-        "furnished": furnished
-    }])
+    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
+    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
+    input_dict["beds"] = st.number_input("Beds", min_value=0)
+    input_dict["livings"] = st.number_input("Living Rooms", min_value=0)
+    input_dict["wc"] = st.number_input("Bathrooms", min_value=0)
+    input_dict["furnished"] = st.selectbox("Furnished", [0, 1])
 
 # 🔵 House
 elif "House" in property_type:
-    area = st.number_input("Area (sqm)", min_value=1.0)
-    city = st.selectbox("City", ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif"])
-    beds = st.number_input("Beds", min_value=0)
-    livings = st.number_input("Living Rooms", min_value=0)
-    wc = st.number_input("Bathrooms", min_value=0)
-    street_width = st.number_input("Street Width", min_value=0)
-
-    input_data = pd.DataFrame([{
-        "area": area,
-        "city": city,
-        "beds": beds,
-        "livings": livings,
-        "wc": wc,
-        "street_width": street_width
-    }])
+    input_dict["area"] = st.number_input("Area (sqm)", min_value=1.0)
+    input_dict["city"] = st.selectbox("City", ["الدمام", "الخبر", "الظهران", "الجبيل", "القطيف"])
+    input_dict["beds"] = st.number_input("Beds", min_value=0)
+    input_dict["livings"] = st.number_input("Living Rooms", min_value=0)
+    input_dict["wc"] = st.number_input("Bathrooms", min_value=0)
+    input_dict["street_width"] = st.number_input("Street Width", min_value=0)
 
 
-# 🚀 التنبؤ
+# 🚀 زر التنبؤ
 if st.button("Predict Price"):
 
-    try:
-        prediction = model.predict(input_data)
-        price = np.exp(prediction[0])
+    # تحويل الإدخال إلى DataFrame
+    input_data = pd.DataFrame([input_dict])
 
-        st.success(f"Predicted Price: {price:,.0f} SAR")
+    # One-hot encoding
+    input_data = pd.get_dummies(input_data)
 
-    except Exception as e:
-        st.error("Error in prediction. Check model or inputs.")
-        st.write(str(e))
+    # 🔥 أهم سطر (يحل المشكلة 100%)
+    input_data = input_data.reindex(columns=model.feature_names_in_, fill_value=0)
+
+    # التنبؤ
+    prediction = model.predict(input_data)
+
+    # لو عندك log في التدريب
+    price = np.exp(prediction[0])
+
+    st.success(f"Predicted Price: {price:,.0f} SAR")
