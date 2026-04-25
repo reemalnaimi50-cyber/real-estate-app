@@ -16,13 +16,13 @@ property_type = st.selectbox("Select Property Type", [
 
 safe = property_type.replace(" ", "_")
 
-# تحميل
+# تحميل الملفات
 model = joblib.load(f"model_{safe.lower()}.pkl")
 columns = joblib.load(f"{safe}_columns.pkl")
 
-# input
 data = {}
 
+# 🔥 أهم شيء: log_area
 area = st.number_input("Area (sqm)", min_value=1.0)
 data["log_area"] = np.log(area)
 
@@ -48,12 +48,13 @@ if "Rent" in property_type:
     rent = st.selectbox("Rent Period", ["Monthly", "6 Months", "Yearly"])
     data["rent_period_num"] = {"Monthly": 1, "6 Months": 6, "Yearly": 12}[rent]
 
-# predict
+# 🚀 prediction
 if st.button("Predict Price"):
 
     df = pd.DataFrame([data])
     df = pd.get_dummies(df)
 
+    # 🔥 توحيد الأعمدة (الحل النهائي لمشكلتك)
     for col in columns:
         if col not in df.columns:
             df[col] = 0
