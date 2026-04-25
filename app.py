@@ -15,7 +15,7 @@ property_type = st.selectbox("Select Property Type", [
     "Land Rent"
 ])
 
-# 📦 تحميل النموذج
+# 📦 تحميل النموذج حسب النوع
 if property_type == "Apartment Rent":
     model = joblib.load("model_apartment_rent.pkl")
 
@@ -26,16 +26,16 @@ elif property_type == "House Rent":
     model = joblib.load("model_house_rent.pkl")
 
 elif property_type == "House Sale":
-    model = joblib.load("model_house_sale.pkl")
+    model = joblib.load("model_house_sale3.pkl")  # ✔ رقم 3
 
 elif property_type == "Land Sale":
-    model = joblib.load("model_land_sale.pkl")
+    model = joblib.load("model_land_sale3.pkl")   # ✔ رقم 3
 
 elif property_type == "Land Rent":
     model = joblib.load("model_land_rent.pkl")
 
 
-# 🎯 المدخلات حسب نوع العقار
+# 🧠 المدخلات حسب نوع العقار
 
 # 🟢 الأراضي
 if "Land" in property_type:
@@ -90,7 +90,7 @@ elif "House" in property_type:
     }])
 
 
-# 🚀 زر التنبؤ (آخر شيء)
+# 🚀 زر التنبؤ
 if st.button("Predict Price"):
 
     input_data = pd.get_dummies(input_data)
