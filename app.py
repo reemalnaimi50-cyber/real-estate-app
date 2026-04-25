@@ -1,3 +1,7 @@
+import streamlit as st
+import joblib
+import numpy as np
+import pandas as pd
 # 🏠 اختيار نوع العقار
 property_type = st.selectbox("Select Property Type", [
     "Apartment Rent",
