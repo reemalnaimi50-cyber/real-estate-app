@@ -19,15 +19,11 @@ def train_model(file_path, name):
     df["log_area"] = np.log(df["area"])
     df["log_price"] = np.log(df["price"])
 
-    # البحر
-    if "distance_to_sea" in df.columns:
-        df["distance_to_sea"] = df["distance_to_sea"].fillna(0)
-    else:
-        df["distance_to_sea"] = 0
+    # بحر
+    df["distance_to_sea"] = df.get("distance_to_sea", 0).fillna(0)
 
     # rent
     rent_map = {"Monthly": 1, "6 Months": 6, "Yearly": 12}
-
     if "rent_period" in df.columns:
         df["rent_period_num"] = df["rent_period"].map(rent_map).fillna(0)
     else:
@@ -86,19 +82,17 @@ def train_model(file_path, name):
 
     print(name, "R2 =", r2)
 
-    # 💾 حفظ النموذج + الأعمدة
+    # 💾 حفظ النموذج + الأعمدة (🔥 أهم تعديل)
     safe = name.replace(" ", "_")
 
     joblib.dump(model, f"model_{safe.lower()}.pkl")
     joblib.dump(X.columns, f"{safe}_columns.pkl")
 
 
-# تشغيل
+# تشغيل كل النماذج
 train_model("Apartment_rent.xlsx", "Apartment Rent")
 train_model("Apartment_sale.xlsx", "Apartment Sale")
-
 train_model("House_rent.xlsx", "House Rent")
 train_model("House_sale.xlsx", "House Sale")
-
 train_model("Land_rent.xlsx", "Land Rent")
 train_model("Land_sale.xlsx", "Land Sale")
